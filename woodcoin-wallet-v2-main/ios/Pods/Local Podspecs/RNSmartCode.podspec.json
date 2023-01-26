@@ -1,0 +1,27 @@
+{
+  "name": "RNSmartCode",
+  "version": "1.1.0",
+  "homepage": "https://github.com/RoJoHub/react-native-smart-code",
+  "summary": "Support React & ReactNative.In react-native,it's create base64 String,which is qrcode or barcode ,and without webview.In react,we use jsbarcode.",
+  "license": "MIT",
+  "authors": {
+    "Jerry.Luo": "tiancailuohao@gmail.com"
+  },
+  "platforms": {
+    "ios": "7.0",
+    "tvos": "9.0"
+  },
+  "source": {
+    "git": "git@github.com:RoJoHub/react-native-smart-code.git"
+  },
+  "source_files": "ios/*/*.{h,m}",
+  "preserve_paths": "*.js",
+  "dependencies": {
+    "React": [
+
+    ],
+    "React-Core": [
+
+    ]
+  }
+}

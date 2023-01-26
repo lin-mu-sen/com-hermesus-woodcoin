@@ -1,0 +1,7 @@
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93330B78
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8AC93F7A
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8AC93F7A
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 886DDD89
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8AC93F7A
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8AC93F7A
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 886DDD89

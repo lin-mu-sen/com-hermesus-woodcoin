@@ -1,0 +1,15 @@
+.idea/
+.vscode/
+node_modules/
+build/
+tmp/
+temp/
+.env
+osm/
+cdn/
+**/distance-matrix
+geocoder/
+db_data/
+cdn/
+core
+rpcclient-test

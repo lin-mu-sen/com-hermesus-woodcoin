@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+  app:
+    image: woody-microsevices_app:latest
+    # command: pm2 start npm --name "nodeserver" -- run start --
+    build: .
+    env_file:
+      - .env.example
+    volumes:
+      - ./:/user/share/app/
+      - "./fullNodeWoody/woodcoin.conf:/root/.woodcoin/woodcoin.conf"
+      # - ./index.js:/root/index.js
+      - woodcoin:/root/.woodcoin/
+    ports:
+      - "5230:5230"
+      - "9338:9338"
+      # - "18338:18338"
+      - "8338:8338"
+      - "3820:3820"
+    depends_on:
+      - db
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'I6NSYAKFgeM/7E9w6p8UrmRkih8D9kWwvYkt3EaAdc'
+      MYSQL_DATABASE: 'woody_app_db'
+      MYSQL_USER: 'woody_app'
+      MYSQL_PASSWORD: 'I6NSYAKFgeM/7E9w6p8UrmRkih8D9kWwvYkt3EaAdc'
+    volumes:
+      - db_data:/var/lib/mysql
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8083:8080
+volumes:
+  db_data: {}
+  woodcoin: {}
+
+

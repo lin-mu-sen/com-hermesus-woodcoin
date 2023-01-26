@@ -1,0 +1,1 @@
+export const CDN_GETTER = (W: number, name: string, H: number) => `https://cdn.WOODCOIN.ru/crop?width=${W}&height=${H}&quality=60&gravity=smart&file=${name}`;

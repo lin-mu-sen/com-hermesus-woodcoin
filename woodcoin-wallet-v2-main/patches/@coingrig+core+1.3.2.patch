@@ -1,0 +1,600 @@
+diff --git a/node_modules/@coingrig/core/dist/balances/drivers/LOG_Driver.d.ts b/node_modules/@coingrig/core/dist/balances/drivers/LOG_Driver.d.ts
+new file mode 100644
+index 0000000..44fe78c
+--- /dev/null
++++ b/node_modules/@coingrig/core/dist/balances/drivers/LOG_Driver.d.ts
+@@ -0,0 +1,7 @@
++import { GenericBalanceDriver } from '../GenericBalanceDriver';
++import { GenericBalance } from '../GenericBalance';
++export declare class LOG_Driver extends GenericBalanceDriver {
++    config: any;
++    getBalance: (address: string) => Promise<GenericBalance>;
++    getBalanceEndpoint(): any;
++}
+diff --git a/node_modules/@coingrig/core/dist/balances/index.d.ts b/node_modules/@coingrig/core/dist/balances/index.d.ts
+index 3b28b40..f4678d8 100644
+--- a/node_modules/@coingrig/core/dist/balances/index.d.ts
++++ b/node_modules/@coingrig/core/dist/balances/index.d.ts
+@@ -1,4 +1,5 @@
+ export { BTC_Driver } from './drivers/BTC_Driver';
++export { LOG_Driver } from './drivers/LOG_Driver';
+ export { ETH_Driver } from './drivers/ETH_Driver';
+ export { BSC_Driver } from './drivers/BSC_Driver';
+ export { POLYGON_Driver } from './drivers/POLYGON_Driver';
+diff --git a/node_modules/@coingrig/core/dist/chains.d.ts b/node_modules/@coingrig/core/dist/chains.d.ts
+index d6fced9..9d3f009 100644
+--- a/node_modules/@coingrig/core/dist/chains.d.ts
++++ b/node_modules/@coingrig/core/dist/chains.d.ts
+@@ -6,10 +6,12 @@
+  * @property {string} ETH "ETH"
+  * @property {string} POLYGON "POLYGON"
+  * @property {string} BSC "BSC"
++ * @property {string} LOG "LOG"
+  */
+ export declare enum Chains {
+     BTC = "BTC",
+     ETH = "ETH",
+     POLYGON = "POLYGON",
+-    BSC = "BSC"
++    BSC = "BSC",
++    LOG = "LOG"
+ }
+diff --git a/node_modules/@coingrig/core/dist/constants.d.ts b/node_modules/@coingrig/core/dist/constants.d.ts
+index 7e4a1e6..cea6677 100644
+--- a/node_modules/@coingrig/core/dist/constants.d.ts
++++ b/node_modules/@coingrig/core/dist/constants.d.ts
+@@ -11,6 +11,7 @@ export declare const BTC_DERIVATION_PATH = "m/84'/0'/0'/0";
+ export declare const QTUM_DERIVATION_PATH = "m/44'/2301'/0'/0";
+ export declare const TRON_DERIVATION_PATH = "m/44'/195'/0'/0";
+ export declare const LTC_DERIVATION_PATH = "m/44'/2'/0'/0";
++export declare const LOG_DERIVATION_PATH = "m/44'/2'/0'/0";
+ export declare const DOGE_DERIVATION_PATH = "m/44'/3'/0'/0";
+ export declare const BCH_DERIVATION_PATH = "m/44'/145'/0'/0";
+ export declare const LYRA_DERIVATION_PATH = "m/44'/497'/0'/0";
+diff --git a/node_modules/@coingrig/core/dist/core.cjs.development.js b/node_modules/@coingrig/core/dist/core.cjs.development.js
+index ce36cc7..61f323d 100644
+--- a/node_modules/@coingrig/core/dist/core.cjs.development.js
++++ b/node_modules/@coingrig/core/dist/core.cjs.development.js
+@@ -1,7 +1,18 @@
+ 'use strict';
+ 
+ Object.defineProperty(exports, '__esModule', { value: true });
+-
++const woodcoin = {
++  messagePrefix: '\u0019Woodcoin Signed Message:\n',
++  bech32: 'log',
++  bip32: {
++    public: 0x0488b21e,
++    private: 0x0488ade4,
++  },
++  pubKeyHash: 0x49,
++  scriptHash: 0x32,
++  wif: 0xb0,
++};
++const LTC_DERIVATION = "m/44'/2'/0'/0/0";
+ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+ 
+ var hdkey = _interopDefault(require('hdkey'));
+@@ -1550,7 +1561,7 @@ var CHAIN_ENDPOINTS$1 = {
+ 						"https://tbtc2.trezor.io/api/v2/sendtx/",
+ 						"https://api.coingrig.com/tbtc/sendtx/"
+ 					],
+-					TESTNET: true
++					TESTNET: false
+ 				}
+ 			}
+ 		]
+@@ -1631,7 +1642,7 @@ var TESTNET_CONFIG_DATA = {
+ };
+ 
+ var TESTNET$2 = /*#__PURE__*/String(process.env.TESTNET) === 'true';
+-console.log('TESTNET: ', process.env.TESTNET, TESTNET$2, typeof process.env.TESTNET, typeof TESTNET$2);
++// console.log('TESTNET: ', process.env.TESTNET, TESTNET$2, typeof process.env.TESTNET, typeof TESTNET$2);
+ var MAINNET_CONFIG = MAINNET_CONFIG_DATA;
+ var TESTNET_CONFIG = TESTNET_CONFIG_DATA;
+ var CONFIG = TESTNET$2 ? TESTNET_CONFIG : MAINNET_CONFIG;
+@@ -1684,6 +1695,130 @@ var GenericGenerator = /*#__PURE__*/function () {
+ 
+   return GenericGenerator;
+ }();
++/**
++ *
++ *
++ * @export
++ * @class WoodcoinGenerator
++ * @extends {GenericGenerator}
++ */
++
++ var WoodcoinGenerator = /*#__PURE__*/function (_GenericGenerator) {
++  _inheritsLoose(WoodcoinGenerator, _GenericGenerator);
++
++  function WoodcoinGenerator() {
++    return _GenericGenerator.apply(this, arguments) || this;
++  }
++
++  WoodcoinGenerator.generateWalletXpub = /*#__PURE__*/function () {
++    var _generateWalletXpub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/runtime_1.mark(function _callee(mnemonic, config) {
++      var hdwallet;
++      return runtime_1.wrap(function _callee$(_context) {
++        while (1) {
++          switch (_context.prev = _context.next) {
++            case 0:
++              if (config === void 0) {
++                config = CONFIG;
++              }
++
++              _context.t0 = hdkey;
++              _context.next = 4;
++              return bip39.mnemonicToSeed(mnemonic);
++
++            case 4:
++              _context.t1 = _context.sent;
++              // _context.t2 = config.TESTNET ? bitcoinjsLib.networks.testnet.bip32 : bitcoinjsLib.networks.bitcoin.bip32;
++              _context.t2 = woodcoin;
++              hdwallet = _context.t0.fromMasterSeed.call(_context.t0, _context.t1, _context.t2);
++              return _context.abrupt("return", hdwallet.derive(LTC_DERIVATION).toJSON().xpub);
++
++            case 8:
++            case "end":
++              return _context.stop();
++          }
++        }
++      }, _callee);
++    }));
++
++    function generateWalletXpub(_x, _x2) {
++      return _generateWalletXpub.apply(this, arguments);
++    }
++
++    return generateWalletXpub;
++  }();
++
++  WoodcoinGenerator.generatePrivateKeyFromMnemonic = /*#__PURE__*/function () {
++    var _generatePrivateKeyFromMnemonic = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/runtime_1.mark(function _callee2(mnemonic, derivation, config) {
++      var network;
++      return runtime_1.wrap(function _callee2$(_context2) {
++        while (1) {
++          switch (_context2.prev = _context2.next) {
++            case 0:
++              if (config === void 0) {
++                config = CONFIG;
++              }
++              network = woodcoin;
++              _context2.t0 = bip32.fromSeed;
++              _context2.next = 5;
++              return bip39.mnemonicToSeed(mnemonic);
++
++            case 5:
++              _context2.t1 = _context2.sent;
++              _context2.t2 = woodcoin;
++              return _context2.abrupt("return", (0, _context2.t0)(_context2.t1, _context2.t2).derivePath(LTC_DERIVATION).derive(derivation).toWIF());
++            case 8:
++            case "end":
++              return _context2.stop();
++          }
++        }
++      }, _callee2);
++    }));
++
++    function generatePrivateKeyFromMnemonic(_x3, _x4, _x5) {
++      return _generatePrivateKeyFromMnemonic.apply(this, arguments);
++    }
++
++    return generatePrivateKeyFromMnemonic;
++  }();
++
++  WoodcoinGenerator.generateAddressFromXPub = /*#__PURE__*/function () {
++    var _generateAddressFromXPub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/runtime_1.mark(function _callee3(xpub, derivation, config) {
++      var network, w, address;
++      return runtime_1.wrap(function _callee3$(_context3) {
++        while (1) {
++          switch (_context3.prev = _context3.next) {
++            case 0:
++              if (config === void 0) {
++                config = CONFIG;
++              }
++
++              network = config.TESTNET ? bitcoinjsLib.networks.testnet : bitcoinjsLib.networks.bitcoin;
++              w = bip32.fromBase58(xpub, woodcoin).derivePath(String(LTC_DERIVATION)); // p2wpkh | p2pkh
++
++              address = bitcoinjsLib.payments.p2wpkh({
++                pubkey: w.publicKey,
++                network: woodcoin
++              }).address;
++              return _context3.abrupt("return", address);
++
++            case 5:
++            case "end":
++              return _context3.stop();
++          }
++        }
++      }, _callee3);
++    }));
++
++    function generateAddressFromXPub(_x6, _x7, _x8) {
++      return _generateAddressFromXPub.apply(this, arguments);
++    }
++
++    return generateAddressFromXPub;
++  }();
++
++  return WoodcoinGenerator;
++}(GenericGenerator);
++
+ 
+ /**
+  *
+@@ -1746,7 +1881,6 @@ var BitcoinGenerator = /*#__PURE__*/function (_GenericGenerator) {
+               if (config === void 0) {
+                 config = CONFIG;
+               }
+-
+               network = config.TESTNET ? bitcoinjsLib.networks.testnet : bitcoinjsLib.networks.bitcoin;
+               _context2.t0 = bip32.fromSeed;
+               _context2.next = 5;
+@@ -2182,6 +2316,121 @@ var BTC_Driver = /*#__PURE__*/function (_GenericBalanceDriver) {
+   return BTC_Driver;
+ }(GenericBalanceDriver);
+ 
++// woodcoin driver get balance
++
++var LOG_Driver = /*#__PURE__*/function (_GenericBalanceDriver) {
++  _inheritsLoose(LOG_Driver, _GenericBalanceDriver);
++
++  function LOG_Driver() {
++    var _this;
++
++    _this = _GenericBalanceDriver.apply(this, arguments) || this;
++
++    _this.getBalance = /*#__PURE__*/function () {
++      var _ref = _asyncToGenerator( /*#__PURE__*/runtime_1.mark(function _callee(address) {
++        var endpoints, i, endpoint, url, param, response, balanceSet, confirmedBalance, unconfirmedBalance;
++        return runtime_1.wrap(function _callee$(_context) {
++          while (1) {
++            switch (_context.prev = _context.next) {
++              case 0:
++                endpoints = _this.getBalanceEndpoint();
++                console.log("getBalanceEndpoint", endpoints);
++                i = 0;
++
++              case 2:
++                if (!(i < endpoints.length)) {
++                  _context.next = 24;
++                  break;
++                }
++                endpoint = endpoints[i];
++                url = endpoint + address + '?details=basic';
++                param = {
++                  method: 'get',
++                  url: url,
++                  headers: {
++                    'User-Agent': UA
++                  },
++                  timeout: 1000
++                };
++                _context.prev = 6;
++                _context.next = 9;
++                return axios(param);
++
++              case 9:
++                response = _context.sent;
++
++                if (!(response.data.balance && response.data.unconfirmedBalance)) {
++                  _context.next = 15;
++                  break;
++                }
++
++                balanceSet = {
++                  balance: response.data.balance,
++                  unconfirmedBalance: response.data.unconfirmedBalance
++                };
++                confirmedBalance = Number(new BigNumber(balanceSet.balance));
++                unconfirmedBalance = Number(new BigNumber(balanceSet.unconfirmedBalance));
++                return _context.abrupt("return", new GenericBalance(_this.currency, satoshi_to_btc(confirmedBalance), satoshi_to_btc(unconfirmedBalance)));
++
++              case 15:
++                _context.next = 19;
++                break;
++
++              case 17:
++                _context.prev = 17;
++                _context.t0 = _context["catch"](6);
++
++              case 19:
++                _context.next = 21;
++                return new Promise(function (resolve) {
++                  return setTimeout(resolve, GENERIC_REQUEST_THROTTLE_DELAY);
++                });
++
++              case 21:
++                i++;
++                _context.next = 2;
++                break;
++
++              case 24:
++                throw new Error('Unable to retrieve balance!');
++
++              case 25:
++              case "end":
++                return _context.stop();
++            }
++          }
++        }, _callee, null, [[6, 17]]);
++      }));
++
++      return function (_x) {
++        return _ref.apply(this, arguments);
++      };
++    }();
++
++    return _this;
++  }
++
++  var _proto = LOG_Driver.prototype;
++
++  _proto.getBalanceEndpoint = function getBalanceEndpoint() {
++    var endpoints = [];
++
++    if (this.config.endpoint) {
++      if (!Array.isArray(this.config.endpoint)) {
++        endpoints = [this.config.endpoint];
++      } else {
++        endpoints = this.config.endpoint;
++      }
++
++      return endpoints;
++    }
++
++    throw new Error(this.currency + ' Balance currency endpoint is required in config');
++  };
++
++  return LOG_Driver;
++}(GenericBalanceDriver);
++
+ var WEB3_Driver = /*#__PURE__*/function (_GenericBalanceDriver) {
+   _inheritsLoose(WEB3_Driver, _GenericBalanceDriver);
+ 
+@@ -2413,6 +2662,7 @@ var index$1 = {
+   BTC_Driver: BTC_Driver,
+   ETH_Driver: ETH_Driver,
+   BSC_Driver: BSC_Driver,
++  LOG_Driver: LOG_Driver,
+   POLYGON_Driver: POLYGON_Driver,
+   GenericBalance: GenericBalance
+ };
+@@ -3695,6 +3945,7 @@ var index$3 = {
+ (function (Chains) {
+   Chains["BTC"] = "BTC";
+   Chains["ETH"] = "ETH";
++  Chains["LOG"] = "LOG";
+   Chains["POLYGON"] = "POLYGON";
+   Chains["BSC"] = "BSC";
+ })(exports.Chains || (exports.Chains = {}));
+@@ -4124,7 +4375,27 @@ var BitcoinWallet = /*#__PURE__*/function (_GenericWallet) {
+ 
+   return BitcoinWallet;
+ }(GenericWallet);
++var WoodcoinWallet = /*#__PURE__*/function (_GenericWallet) {
++  _inheritsLoose(WoodcoinWallet, _GenericWallet);
+ 
++  function WoodcoinWallet() {
++    var _this;
++
++    _this = _GenericWallet.apply(this, arguments) || this;
++    _this.TRANSACTION_DRIVER_NAMESPACE = {
++      LOG_Driver: LOG_Driver
++    };
++    _this.FEES_DRIVER_NAMESPACE = {
++      LOG_Driver: LOG_Driver
++    };
++    _this.BALANCE_DRIVER_NAMESPACE = {
++      LOG_Driver: LOG_Driver
++    };
++    return _this;
++  }
++
++  return WoodcoinWallet;
++}(GenericWallet);
+ var Web3SigningManager = /*#__PURE__*/function () {
+   function Web3SigningManager(client, privateKey) {
+     this.client = client;
+@@ -4511,7 +4782,9 @@ WalletFactory.getWallet = function (config) {
+     case exports.Chains.POLYGON:
+       wallet = new PolygonWallet(config);
+       break;
+-
++      case exports.Chains.LOG:
++        wallet = new WoodcoinWallet(config);
++        break;
+     default:
+       throw new Error('Unsupported wallet blockchain');
+   }
+@@ -4520,7 +4793,7 @@ WalletFactory.getWallet = function (config) {
+ };
+ 
+ var _DRIVER_NAMESPACE;
+-var DRIVER_NAMESPACE = (_DRIVER_NAMESPACE = {}, _DRIVER_NAMESPACE[exports.Chains.BTC] = BitcoinGenerator, _DRIVER_NAMESPACE[exports.Chains.ETH] = EthereumGenerator, _DRIVER_NAMESPACE[exports.Chains.POLYGON] = PolygonGenerator, _DRIVER_NAMESPACE[exports.Chains.BSC] = BscGenerator, _DRIVER_NAMESPACE);
++var DRIVER_NAMESPACE = (_DRIVER_NAMESPACE = {}, _DRIVER_NAMESPACE[exports.Chains.LOG] = WoodcoinGenerator, _DRIVER_NAMESPACE[exports.Chains.BTC] = BitcoinGenerator, _DRIVER_NAMESPACE[exports.Chains.ETH] = EthereumGenerator, _DRIVER_NAMESPACE[exports.Chains.POLYGON] = PolygonGenerator, _DRIVER_NAMESPACE[exports.Chains.BSC] = BscGenerator, _DRIVER_NAMESPACE);
+ /**
+  *
+  *
+diff --git a/node_modules/@coingrig/core/dist/core.esm.js b/node_modules/@coingrig/core/dist/core.esm.js
+index a9d443f..d4811fc 100644
+--- a/node_modules/@coingrig/core/dist/core.esm.js
++++ b/node_modules/@coingrig/core/dist/core.esm.js
+@@ -1317,6 +1317,32 @@ var TRANSFER_METHOD_ABI = {
+ var TESTNET = false;
+ var DEFAULT_DERIVATION_KEY = 0;
+ var CHAIN_ENDPOINTS = {
++  LOG: {
++		balance: [
++			{
++				driver: "LOG_Driver",
++				config: {
++					endpoint: "dnsseed.woodcoin.org",
++				}
++			}
++		],
++		fee: [
++			{
++				driver: "LOG_Driver",
++				config: {
++					endpoint: "dnsseed.woodcoin.org",
++				}
++			}
++		],
++		transaction: [
++			{
++				driver: "LOG_Driver",
++				config: {
++					endpoint: "dnsseed.woodcoin.org",
++				}
++			}
++		]
++	},
+ 	BSC: {
+ 		balance: [
+ 			{
+@@ -1506,6 +1532,32 @@ var CHAIN_ENDPOINTS$1 = {
+ 			}
+ 		]
+ 	},
++	LOG: {
++		balance: [
++			{
++				driver: "LOG_Driver",
++				config: {
++					endpoint: "dnsseed.woodcoin.org:8338",
++				}
++			}
++		],
++		fee: [
++			{
++				driver: "LOG_Driver",
++				config: {
++					endpoint: "dnsseed.woodcoin.org:8338",
++				}
++			}
++		],
++		transaction: [
++			{
++				driver: "LOG_Driver",
++				config: {
++					endpoint: "dnsseed.woodcoin.org:8338",
++				}
++			}
++		]
++	},
+ 	BTC: {
+ 		balance: [
+ 			{
+diff --git a/node_modules/@coingrig/core/dist/currencies.d.ts b/node_modules/@coingrig/core/dist/currencies.d.ts
+index 33db1d1..6720e28 100644
+--- a/node_modules/@coingrig/core/dist/currencies.d.ts
++++ b/node_modules/@coingrig/core/dist/currencies.d.ts
+@@ -2,6 +2,7 @@ export declare enum Currency {
+     BTC = "BTC",
+     BCH = "BCH",
+     LTC = "LTC",
++    LTC = "LOG",
+     CELO = "CELO",
+     ONE = "ONE",
+     CUSD = "CUSD",
+diff --git a/node_modules/@coingrig/core/dist/generators/drivers/woodcoin.d.ts b/node_modules/@coingrig/core/dist/generators/drivers/woodcoin.d.ts
+new file mode 100644
+index 0000000..c434d2a
+--- /dev/null
++++ b/node_modules/@coingrig/core/dist/generators/drivers/woodcoin.d.ts
+@@ -0,0 +1,13 @@
++import { GenericGenerator } from '../GenericGenerator';
++/**
++ *
++ *
++ * @export
++ * @class BitcoinGenerator
++ * @extends {GenericGenerator}
++ */
++export declare class WoodcoinGenerator extends GenericGenerator {
++    static generateWalletXpub(mnemonic: any, config?: any): Promise<any>;
++    static generatePrivateKeyFromMnemonic(mnemonic: any, derivation: any, config?: any): Promise<string>;
++    static generateAddressFromXPub(xpub: any, derivation: any, config?: any): Promise<string>;
++}
+diff --git a/node_modules/@coingrig/core/dist/generators/index.d.ts b/node_modules/@coingrig/core/dist/generators/index.d.ts
+index 76a5f2d..a09db25 100644
+--- a/node_modules/@coingrig/core/dist/generators/index.d.ts
++++ b/node_modules/@coingrig/core/dist/generators/index.d.ts
+@@ -2,3 +2,4 @@ export { BitcoinGenerator } from './drivers/bitcoin';
+ export { BscGenerator } from './drivers/bsc';
+ export { EthereumGenerator } from './drivers/ethereum';
+ export { PolygonGenerator } from './drivers/polygon';
++export { WoodcoinGenerator } from './drivers/woodcoin';
+diff --git a/node_modules/@coingrig/core/dist/index.js b/node_modules/@coingrig/core/dist/index.js
+index 5fec473..980d0ec 100644
+--- a/node_modules/@coingrig/core/dist/index.js
++++ b/node_modules/@coingrig/core/dist/index.js
+@@ -1,8 +1,8 @@
+ 
+ 'use strict'
+ 
+-if (process.env.NODE_ENV === 'production') {
+-  module.exports = require('./core.cjs.production.min.js')
+-} else {
++// if (process.env.NODE_ENV === 'production') {
++//   module.exports = require('./core.cjs.production.min.js')
++// } else {
+   module.exports = require('./core.cjs.development.js')
+-}
++// }
+diff --git a/node_modules/@coingrig/core/dist/transactions/drivers/LOG_Driver.d.ts b/node_modules/@coingrig/core/dist/transactions/drivers/LOG_Driver.d.ts
+new file mode 100644
+index 0000000..0d1090e
+--- /dev/null
++++ b/node_modules/@coingrig/core/dist/transactions/drivers/LOG_Driver.d.ts
+@@ -0,0 +1,10 @@
++import { GenericTransactionDriver } from '../GenericTransactionDriver';
++import { GenericTxProposal } from '../../fees/GenericTxProposal';
++export declare class LOG_Driver extends GenericTransactionDriver {
++    send: (transaction: GenericTxProposal) => Promise<any>;
++    prepareSignedTransaction: (body: any) => Promise<string>;
++    getTxs: (tx: string) => Promise<any>;
++    sendRaw: (transaction: any) => Promise<any>;
++    getTransactionSendEndpoint(): any;
++    getTransactionInfoEndpoint(): any;
++}
+diff --git a/node_modules/@coingrig/core/dist/transactions/index.d.ts b/node_modules/@coingrig/core/dist/transactions/index.d.ts
+index 6cc85f8..db57d3f 100644
+--- a/node_modules/@coingrig/core/dist/transactions/index.d.ts
++++ b/node_modules/@coingrig/core/dist/transactions/index.d.ts
+@@ -1,4 +1,5 @@
+ export { BTC_Driver } from './drivers/BTC_Driver';
+ export { ETH_Driver } from './drivers/ETH_Driver';
++export { LOG_Driver } from './drivers/LOG_Driver';
+ export { BSC_Driver } from './drivers/BSC_Driver';
+ export { POLYGON_Driver } from './drivers/POLYGON_Driver';
+diff --git a/node_modules/@coingrig/core/dist/wallets/index.d.ts b/node_modules/@coingrig/core/dist/wallets/index.d.ts
+index d1ad2cf..3e8d5d0 100644
+--- a/node_modules/@coingrig/core/dist/wallets/index.d.ts
++++ b/node_modules/@coingrig/core/dist/wallets/index.d.ts
+@@ -2,3 +2,4 @@ export { EthereumWallet } from './types/EthereumWallet';
+ export { BitcoinWallet } from './types/BitcoinWallet';
+ export { BscWallet } from './types/BscWallet';
+ export { PolygonWallet } from './types/PolygonWallet';
++export { WoodcoinWallet } from './types/WoodcoinWallet';
+diff --git a/node_modules/@coingrig/core/dist/wallets/types/WoodcoinWallet.d.ts b/node_modules/@coingrig/core/dist/wallets/types/WoodcoinWallet.d.ts
+new file mode 100644
+index 0000000..3319a74
+--- /dev/null
++++ b/node_modules/@coingrig/core/dist/wallets/types/WoodcoinWallet.d.ts
+@@ -0,0 +1,12 @@
++import { GenericWallet } from '../GenericWallet';
++export declare class WoodcoinWallet extends GenericWallet {
++    TRANSACTION_DRIVER_NAMESPACE: {
++        [key: string]: any;
++    };
++    FEES_DRIVER_NAMESPACE: {
++        [key: string]: any;
++    };
++    BALANCE_DRIVER_NAMESPACE: {
++        [key: string]: any;
++    };
++}

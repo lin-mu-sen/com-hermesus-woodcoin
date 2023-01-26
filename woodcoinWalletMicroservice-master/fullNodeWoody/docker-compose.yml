@@ -1,0 +1,26 @@
+version: "3.3"
+services:
+  full_node:
+    image: "km8oz/woodcoin-full-node:latest"
+    command: woodcoind -rescan -daemon -server -rest -dnsseed -listen -dns -rpcuser=woodcoinrpc -rpcpassword=CaMuLoStzWx13sPvPqRUM5SnbmYifTpdfZjgnMa5H6NH
+    command: sleep 30
+    command: npm start
+    command: tail -f /dev/null
+    volumes:
+      - "./woodcoin.conf:/root/.woodcoin/woodcoin.conf"
+      - "./fullNodeWoody/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf"
+      - ./index.js:/root/index.js
+      - woodcoin_data:/root/.woodcoin/
+    ports:
+      - "9338:9338"
+      # - "18338:18338"
+      - "8338:8338"
+      - "3820:3820"
+volumes:
+  woodcoin_data: {}
+# apt install debian-archive-keyring
+# docker exec -d woodcoin-full-node_full_node_1 npm start
+# wget -O - https://www.ports.debian.org/archive_2018.key | apt-key add -
+# docker build --no-cache -t woodcoin-full-node:latest -f dockerfiles/Dockerfile .
+# echo "deb http://ftp.ru.debian.org/debian stretch main \ndeb-src http://ftp.ru.debian.org/debian stretch main" | tee /etc/apt/sources.list.d/debian_stretch.list
+# echo "deb-src http://ftp.ru.debian.org/debian stretch main" | tee /etc/apt/sources.list.d/debian_stretch.list

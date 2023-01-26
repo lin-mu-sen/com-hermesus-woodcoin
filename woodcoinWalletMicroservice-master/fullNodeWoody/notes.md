@@ -1,0 +1,2 @@
+create wallet inside of the node: 
+> woodcoin-cli createmultisig 1 "[\"048c18af2c820a04c524ca5014053e9c1a1bd086d4953a043914e2f3043c5de32898bf43eca7323fe3be34a8b5402a5bf67ff08c27aed5985328e8379715ac483d\"]"

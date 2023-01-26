@@ -1,0 +1,1 @@
+../../../../../node_modules/react-native-smart-code/ios/RNCodeGenerator/RCTConvert+GeneratorCodeType.h

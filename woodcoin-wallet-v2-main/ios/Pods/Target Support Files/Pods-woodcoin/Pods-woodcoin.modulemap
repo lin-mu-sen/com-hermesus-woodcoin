@@ -1,0 +1,6 @@
+module Pods_woodcoin {
+  umbrella header "Pods-woodcoin-umbrella.h"
+
+  export *
+  module * { export * }
+}
